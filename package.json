@@ -1,17 +1,18 @@
 {
   "name": "agora-token-server",
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs", // Cambiado de "module" a "commonjs"
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
-    "node": ">=18"
+    "node": "18.x" // Versión específica recomendada
   },
   "dependencies": {
     "agora-access-token": "^2.0.4",
     "cors": "^2.8.5",
     "express": "^4.18.2"
-  }
+  },
+  "license": "MIT" // Añadir licencia
 }
