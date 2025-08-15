@@ -1,59 +1,35 @@
-// Importaciones (CommonJS)
-const express = require('express');
-const cors = require('cors');
-const { ChatTokenBuilder } = require('agora-access-token');
+import express from "express";
+import cors from "cors";
+import { ChatTokenBuilder } from "agora-access-token";
 
-// Configuración inicial
 const app = express();
 app.use(cors());
 
-// Variables de entorno (configurar en Render)
+// Configuración para Agora Chat (no RTC)
 const APP_ID = process.env.APP_ID;
 const APP_CERTIFICATE = process.env.APP_CERTIFICATE;
-const APP_KEY = process.env.APP_KEY;
+const APP_KEY = process.env.APP_KEY; // Nueva variable para Chat SDK
 
-// Endpoint principal: GET /get-agora-token?userId=...
-app.get('/get-agora-token', (req, res) => {
+app.get("/get-agora-chat-token", (req, res) => {
   try {
     const userId = req.query.userId;
-    
-    // Validación
-    if (!userId) {
-      return res.status(400).json({ 
-        success: false,
-        error: "El parámetro 'userId' es requerido" 
-      });
-    }
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
 
-    // Generar token (expira en 1 hora)
-    const expireTime = Math.floor(Date.now() / 1000) + 3600;
+    // 1. Token para Chat SDK (no RTC)
     const token = ChatTokenBuilder.buildUserToken(
       APP_ID,
       APP_CERTIFICATE,
       userId,
-      expireTime
+      Math.floor(Date.now() / 1000) + 3600 // 1 hora de expiración
     );
 
-    // Respuesta
-    res.json({
-      success: true,
-      userId: userId,  // Devuelve el mismo userId recibido
+    // 2. Respuesta compatible con FlutterFlow
+    return res.json({ 
       token: token,
-      appKey: APP_KEY,
-      expiresAt: expireTime
+      agoraAppKey: APP_KEY // Necesario para inicializar el SDK
     });
-
   } catch (e) {
-    console.error('Error:', e);
-    res.status(500).json({ 
-      success: false,
-      error: "Error al generar el token" 
-    });
+    console.error("Error generating token:", e);
+    return res.status(500).json({ error: "Token generation failed" });
   }
-});
-
-// Iniciar servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor listo en http://localhost:${PORT}`);
 });
