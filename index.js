@@ -1,35 +1,45 @@
-import express from "express";
-import cors from "cors";
-import { ChatTokenBuilder } from "agora-access-token";
+const express = require('express');
+const cors = require('cors');
+const { ChatTokenBuilder } = require('agora-access-token');
 
 const app = express();
 app.use(cors());
 
-// Configuración para Agora Chat (no RTC)
+// Configuración desde variables de entorno
 const APP_ID = process.env.APP_ID;
 const APP_CERTIFICATE = process.env.APP_CERTIFICATE;
-const APP_KEY = process.env.APP_KEY; // Nueva variable para Chat SDK
+const APP_KEY = process.env.APP_KEY;
 
-app.get("/get-agora-chat-token", (req, res) => {
+// Endpoint original: /get-agora-chat-token?userId=...
+app.get('/get-agora-chat-token', (req, res) => {
   try {
     const userId = req.query.userId;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
+    if (!userId) {
+      return res.status(400).json({ error: "Se requiere 'userId'" });
+    }
 
-    // 1. Token para Chat SDK (no RTC)
+    const expireTime = Math.floor(Date.now() / 1000) + 3600;
     const token = ChatTokenBuilder.buildUserToken(
       APP_ID,
       APP_CERTIFICATE,
       userId,
-      Math.floor(Date.now() / 1000) + 3600 // 1 hora de expiración
+      expireTime
     );
 
-    // 2. Respuesta compatible con FlutterFlow
-    return res.json({ 
+    res.json({
       token: token,
-      agoraAppKey: APP_KEY // Necesario para inicializar el SDK
+      appKey: APP_KEY,
+      expiresAt: expireTime
     });
+
   } catch (e) {
-    console.error("Error generating token:", e);
-    return res.status(500).json({ error: "Token generation failed" });
+    console.error('Error:', e);
+    res.status(500).json({ error: "Error al generar token" });
   }
+});
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor activo en puerto ${PORT}`);
 });
