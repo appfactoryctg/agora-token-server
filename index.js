@@ -1,6 +1,7 @@
-const express = require('express');
-const cors = require('cors');
-const { ChatTokenBuilder } = require('agora-access-token');
+import express from 'express';
+import cors from 'cors';
+import agoraAccessToken from 'agora-access-token';
+const { ChatTokenBuilder } = agoraAccessToken;
 
 const app = express();
 app.use(cors());
@@ -10,7 +11,7 @@ const APP_ID = process.env.APP_ID;
 const APP_CERTIFICATE = process.env.APP_CERTIFICATE;
 const APP_KEY = process.env.APP_KEY;
 
-// Endpoint original: /get-agora-chat-token?userId=...
+// Endpoint
 app.get('/get-agora-chat-token', (req, res) => {
   try {
     const userId = req.query.userId;
@@ -38,7 +39,6 @@ app.get('/get-agora-chat-token', (req, res) => {
   }
 });
 
-// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor activo en puerto ${PORT}`);
