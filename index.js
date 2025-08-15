@@ -1,23 +1,24 @@
-import express from "express";
-import cors from "cors";
-import { ChatTokenBuilder } from "agora-access-token";
+import express from 'express';
+import cors from 'cors';
+import agoraAccessToken from 'agora-access-token'; // Cambio clave aquí
+
+const { ChatTokenBuilder } = agoraAccessToken; // Destructuración después del import
 
 const app = express();
 app.use(cors());
 
-// Variables de entorno (configurar en Render)
+// Configuración
 const APP_ID = process.env.APP_ID;
 const APP_CERTIFICATE = process.env.APP_CERTIFICATE;
 const APP_KEY = process.env.APP_KEY;
 
-// Endpoint para tokens de Chat
-app.get("/get-agora-chat-token", (req, res) => {
+// Endpoint para tokens
+app.get('/get-agora-chat-token', (req, res) => {
   try {
     const userId = req.query.userId;
-    if (!userId) return res.status(400).json({ error: "Se requiere userId" });
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
 
-    const expireTime = Math.floor(Date.now() / 1000) + 3600; // 1 hora
-    
+    const expireTime = Math.floor(Date.now() / 1000) + 3600;
     const token = ChatTokenBuilder.buildUserToken(
       APP_ID,
       APP_CERTIFICATE,
@@ -25,18 +26,19 @@ app.get("/get-agora-chat-token", (req, res) => {
       expireTime
     );
 
-    return res.json({ 
+    return res.json({
       token: token,
       appKey: APP_KEY,
       expiresAt: expireTime
     });
   } catch (e) {
-    console.error("Error generando token:", e);
-    return res.status(500).json({ error: "Error al generar token" });
+    console.error('Token generation error:', e);
+    return res.status(500).json({ error: "Token generation failed" });
   }
 });
 
+// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Servidor listo en puerto ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
