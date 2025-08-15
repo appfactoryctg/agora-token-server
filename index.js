@@ -1,24 +1,25 @@
 import express from 'express';
 import cors from 'cors';
-import agoraAccessToken from 'agora-access-token'; // Cambio clave aquí
-
-const { ChatTokenBuilder } = agoraAccessToken; // Destructuración después del import
+import { ChatTokenBuilder } from 'agora-access-token';
 
 const app = express();
 app.use(cors());
 
-// Configuración
+// Configuración desde variables de entorno
 const APP_ID = process.env.APP_ID;
 const APP_CERTIFICATE = process.env.APP_CERTIFICATE;
 const APP_KEY = process.env.APP_KEY;
 
-// Endpoint para tokens
-app.get('/get-agora-chat-token', (req, res) => {
+// Endpoint que genera automáticamente usuario + token
+app.get('/generate-agora-token', (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
-
+    // 1. Generar userId aleatorio (ej: "user_a1b2c3")
+    const userId = `user_${Math.random().toString(36).substring(2, 8)}`;
+    
+    // 2. Configurar expiración (1 hora)
     const expireTime = Math.floor(Date.now() / 1000) + 3600;
+
+    // 3. Generar token
     const token = ChatTokenBuilder.buildUserToken(
       APP_ID,
       APP_CERTIFICATE,
@@ -26,14 +27,21 @@ app.get('/get-agora-chat-token', (req, res) => {
       expireTime
     );
 
-    return res.json({
+    // 4. Enviar respuesta
+    res.json({
+      success: true,
+      userId: userId,
       token: token,
       appKey: APP_KEY,
       expiresAt: expireTime
     });
+
   } catch (e) {
-    console.error('Token generation error:', e);
-    return res.status(500).json({ error: "Token generation failed" });
+    console.error('Error generating token:', e);
+    res.status(500).json({ 
+      success: false,
+      error: "Internal server error" 
+    });
   }
 });
 
